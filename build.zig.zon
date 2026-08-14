@@ -38,7 +38,7 @@
         },
         .playday_api = .{
             .url = "../api",
-            .hash = "api-0.0.0-QEMpwA4gAADfIzL7PPOP6M3R1OJPuNBo4O6N8wtcHkDV",
+            .hash = "api-0.0.0-QEMpwF4sAAA5UL4bSvHlTlzONp6YWaIA-qSv-Xt8Nbkv",
         },
     },
     .paths = .{

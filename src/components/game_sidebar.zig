@@ -12,14 +12,10 @@ pub fn gameSidebar() void {
     var scroll = dvui.scrollArea(@src(), .{}, .{ .background = false, .expand = .horizontal });
     defer scroll.deinit();
 
-    if (store.gamesStore.games == null) {
-        return;
-    }
-
-    for (store.gamesStore.games.?, 0..) |game, index| {
+    for (store.gamesStore.games.items, 0..) |game, index| {
         const isSelected = components.button(
             @src(),
-            game.name,
+            game.name[0..],
             .{
                 .gravity_x = 0,
                 .gravity_y = 0.5,
@@ -35,7 +31,7 @@ pub fn gameSidebar() void {
         );
 
         if (isSelected) {
-            store.gamesStore.selectedGame = &store.gamesStore.games.?[index];
+            store.gamesStore.selectedGame = &store.gamesStore.games.items[index];
         }
     }
 }

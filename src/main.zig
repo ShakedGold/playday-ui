@@ -7,7 +7,7 @@ const store = @import("store");
 
 const Io = std.Io;
 
-var debugAllocator: std.heap.DebugAllocator(.{ .verbose_log = true }) = undefined;
+var debugAllocator: std.heap.DebugAllocator(.{}) = undefined;
 
 pub const dvui_app: dvui.App = .{
     .config = .{
@@ -48,11 +48,29 @@ pub fn frame() !dvui.App.Result {
     }
 
     if (panedWidget.showSecond()) {
+        const should_refresh_steam_games = dvui.button(@src(), "Refresh Steam Games", .{}, .{ .gravity_x = 1.0 });
+
         if (store.gamesStore.selectedGame == null) {
             var box = dvui.box(@src(), .{ .dir = .vertical }, .{ .expand = .both, .background = false });
             defer box.deinit();
         } else {
             components.gamePage(store.gamesStore.selectedGame.?);
+        }
+
+        if (should_refresh_steam_games) {
+            const allocator = debugAllocator.allocator();
+            var threaded: std.Io.Threaded = .init_single_threaded;
+            const io = threaded.io();
+
+            var webApiGames = try store.steamStore.library.getGames(allocator);
+            defer webApiGames.deinit(allocator);
+
+            const duplicateGames = try store.gamesStore.extendGames(webApiGames.items, io, allocator);
+            for (duplicateGames) |*game| {
+                game.deinit(allocator);
+            }
+
+            allocator.free(duplicateGames);
         }
     }
 
@@ -63,15 +81,24 @@ pub fn init(window: *dvui.Window) !void {
     _ = window; //autofix
     debugAllocator = .init;
 
+    const allocator = debugAllocator.allocator();
     var threaded: std.Io.Threaded = .init_single_threaded;
     const io = threaded.io();
 
-    store.gamesStore.games = try playday_api.models.game.getGames(debugAllocator.allocator(), io);
+    store.steamStore.init(io, allocator, "3FEFC8754FB970CDCED1C085DE770699", "76561198369990015");
+
+    var dbGames = try playday_api.models.game.getGames(allocator, io);
+    defer dbGames.deinit(allocator);
+    try store.gamesStore.games.appendSlice(allocator, dbGames.items);
 }
 
 pub fn deinit(window: *dvui.Window) void {
     _ = window; //autofix
 
-    playday_api.db.deinit();
+    const allocator = debugAllocator.allocator();
+
+    store.gamesStore.deinit(allocator);
+    store.steamStore.deinit();
+
     _ = debugAllocator.deinit();
 }
