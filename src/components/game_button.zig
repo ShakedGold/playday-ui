@@ -3,8 +3,24 @@ const dvui = @import("dvui");
 
 const InitOptions = struct { button_init_options: dvui.ButtonWidget.InitOptions, gravity_x: ?f32, gravity_y: ?f32 };
 
+const GameButtonOptions = struct {
+    box_options: dvui.Options,
+    icon_options: dvui.Options,
+    button_options: dvui.Options,
+};
+
+pub fn game_button(src: std.builtin.SourceLocation, label_str: []const u8, icon_bytes: ?[]const u8, init_opts: InitOptions, options: GameButtonOptions) bool {
+    var box = dvui.box(src, .{ .dir = .horizontal }, options.box_options);
+    defer box.deinit();
+
+    if (icon_bytes != null) {
+        _ = dvui.image(@src(), .{ .source = .{ .imageFile = .{ .bytes = icon_bytes.?, .name = label_str } } }, options.icon_options);
+    }
+    return button(@src(), label_str, init_opts, options.button_options);
+}
+
 // Source: https://david-vanderson.github.io/docs/#dvui.button
-pub fn button(src: std.builtin.SourceLocation, label_str: []const u8, init_opts: InitOptions, opts: dvui.Options) bool {
+fn button(src: std.builtin.SourceLocation, label_str: []const u8, init_opts: InitOptions, opts: dvui.Options) bool {
     // initialize widget and get rectangle from parent and make ourselves the new parent
     var bw: dvui.ButtonWidget = undefined;
 

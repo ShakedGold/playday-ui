@@ -8,6 +8,8 @@ const store = @import("store");
 const Io = std.Io;
 
 var debugAllocator: std.heap.DebugAllocator(.{}) = undefined;
+var threaded: std.Io.Threaded = .init_single_threaded;
+var initGlobal: std.process.Init = undefined;
 
 pub const dvui_app: dvui.App = .{
     .config = .{
@@ -19,18 +21,24 @@ pub const dvui_app: dvui.App = .{
             },
         },
     },
-    .frameFn = frame,
-    .initFn = init,
-    .deinitFn = deinit,
+    .frameFn = renderFrameWindow,
+    .initFn = initWindow,
+    .deinitFn = deinitWindow,
 };
 
-pub const main = dvui.App.main;
+pub fn main(init: std.process.Init) !u8 {
+    // we have to save this to a global because dvui does not pass it to us.
+    initGlobal = init;
+
+    return dvui.App.main(init);
+}
+
 pub const panic = dvui.App.panic;
 pub const std_options: std.Options = .{
     .logFn = dvui.App.logFn,
 };
 
-pub fn frame() !dvui.App.Result {
+pub fn renderFrameWindow() !dvui.App.Result {
     const panedWidget = dvui.paned(@src(), .{
         .direction = .horizontal,
         .collapsed_size = 0,
@@ -59,7 +67,6 @@ pub fn frame() !dvui.App.Result {
 
         if (should_refresh_steam_games) {
             const allocator = debugAllocator.allocator();
-            var threaded: std.Io.Threaded = .init_single_threaded;
             const io = threaded.io();
 
             var webApiGames = try store.steamStore.library.getGames(allocator);
@@ -77,22 +84,21 @@ pub fn frame() !dvui.App.Result {
     return .ok;
 }
 
-pub fn init(window: *dvui.Window) !void {
+pub fn initWindow(window: *dvui.Window) !void {
     _ = window; //autofix
     debugAllocator = .init;
 
     const allocator = debugAllocator.allocator();
-    var threaded: std.Io.Threaded = .init_single_threaded;
     const io = threaded.io();
 
-    store.steamStore.init(io, allocator, "3FEFC8754FB970CDCED1C085DE770699", "76561198369990015");
+    try store.steamStore.init(initGlobal, "3FEFC8754FB970CDCED1C085DE770699", "76561198369990015");
 
     var dbGames = try playday_api.models.game.getGames(allocator, io);
     defer dbGames.deinit(allocator);
     try store.gamesStore.games.appendSlice(allocator, dbGames.items);
 }
 
-pub fn deinit(window: *dvui.Window) void {
+pub fn deinitWindow(window: *dvui.Window) void {
     _ = window; //autofix
 
     const allocator = debugAllocator.allocator();

@@ -6,5 +6,5 @@ pub fn gamePage(game: *const playday_api.models.game.Game) void {
     dvui.label(@src(), "Name: {s}", .{game.name}, .{});
     dvui.label(@src(), "ID: {s}", .{game.id}, .{});
     dvui.label(@src(), "Playtime: {d}", .{game.playtime}, .{});
-    dvui.label(@src(), "Icon: {s}", .{game.icon}, .{});
+    dvui.label(@src(), "Is Installed: {}", .{game.is_installed}, .{});
 }
