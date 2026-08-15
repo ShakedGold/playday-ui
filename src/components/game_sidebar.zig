@@ -8,9 +8,6 @@ const playday_api = @import("playday_api");
 const log = std.log.scoped(.game_sidebar);
 
 pub fn gameSidebar() void {
-    var box = dvui.box(@src(), .{ .dir = .vertical }, .{ .expand = .both, .background = true, .color_fill = .red });
-    defer box.deinit();
-
     var scroll = dvui.scrollArea(@src(), .{}, .{ .background = false, .expand = .horizontal });
     defer scroll.deinit();
 
@@ -22,11 +19,11 @@ pub fn gameSidebar() void {
             .{
                 .gravity_x = 0,
                 .gravity_y = 0.5,
-                .button_init_options = .{},
+                .button_init_options = .{ .grayed = game.installed_location == null },
             },
             .{
                 .box_options = .{ .id_extra = index, .expand = .horizontal },
-                .icon_options = .{ .id_extra = index },
+                .icon_options = .{ .id_extra = index, .max_size_content = .all(35) },
                 .button_options = .{
                     .id_extra = index,
                     .margin = .all(0),

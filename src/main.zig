@@ -7,8 +7,6 @@ const store = @import("store");
 
 const Io = std.Io;
 
-var debugAllocator: std.heap.DebugAllocator(.{}) = undefined;
-var threaded: std.Io.Threaded = .init_single_threaded;
 var initGlobal: std.process.Init = undefined;
 
 pub const dvui_app: dvui.App = .{
@@ -62,22 +60,19 @@ pub fn renderFrameWindow() !dvui.App.Result {
             var box = dvui.box(@src(), .{ .dir = .vertical }, .{ .expand = .both, .background = false });
             defer box.deinit();
         } else {
-            components.gamePage(store.gamesStore.selectedGame.?);
+            try components.gamePage(initGlobal.gpa, initGlobal.io, store.gamesStore.selectedGame.?);
         }
 
         if (should_refresh_steam_games) {
-            const allocator = debugAllocator.allocator();
-            const io = threaded.io();
+            var webApiGames = try store.steamStore.library.getGames(initGlobal.gpa);
+            defer webApiGames.deinit(initGlobal.gpa);
 
-            var webApiGames = try store.steamStore.library.getGames(allocator);
-            defer webApiGames.deinit(allocator);
-
-            const duplicateGames = try store.gamesStore.extendGames(webApiGames.items, io, allocator);
+            const duplicateGames = try store.gamesStore.extendGames(webApiGames.items, initGlobal.io, initGlobal.gpa);
             for (duplicateGames) |*game| {
-                game.deinit(allocator);
+                game.deinit(initGlobal.gpa);
             }
 
-            allocator.free(duplicateGames);
+            initGlobal.gpa.free(duplicateGames);
         }
     }
 
@@ -86,25 +81,15 @@ pub fn renderFrameWindow() !dvui.App.Result {
 
 pub fn initWindow(window: *dvui.Window) !void {
     _ = window; //autofix
-    debugAllocator = .init;
-
-    const allocator = debugAllocator.allocator();
-    const io = threaded.io();
-
+    try store.assetsStore.init(initGlobal.io, initGlobal.gpa);
     try store.steamStore.init(initGlobal, "3FEFC8754FB970CDCED1C085DE770699", "76561198369990015");
-
-    var dbGames = try playday_api.models.game.getGames(allocator, io);
-    defer dbGames.deinit(allocator);
-    try store.gamesStore.games.appendSlice(allocator, dbGames.items);
+    try store.gamesStore.init(initGlobal.io, initGlobal.gpa);
 }
 
 pub fn deinitWindow(window: *dvui.Window) void {
     _ = window; //autofix
 
-    const allocator = debugAllocator.allocator();
-
-    store.gamesStore.deinit(allocator);
+    store.assetsStore.deinit(initGlobal.gpa);
+    store.gamesStore.deinit(initGlobal.gpa);
     store.steamStore.deinit();
-
-    _ = debugAllocator.deinit();
 }

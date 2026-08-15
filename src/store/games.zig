@@ -6,6 +6,13 @@ var debugAllocator: std.heap.DebugAllocator(.{ .verbose_log = true }) = .init;
 pub var games: std.ArrayList(playday_api.models.game.Game) = .empty;
 pub var selectedGame: ?*const playday_api.models.game.Game = null;
 
+pub fn init(io: std.Io, allocator: std.mem.Allocator) !void {
+    var dbGames = try playday_api.models.game.getGames(allocator, io);
+    defer dbGames.deinit(allocator);
+
+    try games.appendSlice(allocator, dbGames.items);
+}
+
 /// Returns an slice of the items that were duplicated, the caller owns the slice
 pub fn extendGames(addedGames: []playday_api.models.game.Game, io: std.Io, allocator: std.mem.Allocator) ![]playday_api.models.game.Game {
     var duplicatedGames: std.ArrayList(playday_api.models.game.Game) = .empty;

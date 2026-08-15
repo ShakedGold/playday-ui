@@ -1,5 +1,6 @@
 const std = @import("std");
 const dvui = @import("dvui");
+const store = @import("store");
 
 const InitOptions = struct { button_init_options: dvui.ButtonWidget.InitOptions, gravity_x: ?f32, gravity_y: ?f32 };
 
@@ -13,9 +14,13 @@ pub fn game_button(src: std.builtin.SourceLocation, label_str: []const u8, icon_
     var box = dvui.box(src, .{ .dir = .horizontal }, options.box_options);
     defer box.deinit();
 
-    if (icon_bytes != null) {
-        _ = dvui.image(@src(), .{ .source = .{ .imageFile = .{ .bytes = icon_bytes.?, .name = label_str } } }, options.icon_options);
-    }
+    const icon = if (icon_bytes != null) icon_bytes.? else store.assetsStore.assetFiles.get(.default_icon).?;
+    _ = dvui.image(
+        @src(),
+        .{ .source = .{ .imageFile = .{ .bytes = icon, .name = label_str } }, .shrink = .ratio },
+        options.icon_options,
+    );
+
     return button(@src(), label_str, init_opts, options.button_options);
 }
 
