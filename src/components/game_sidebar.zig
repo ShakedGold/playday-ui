@@ -10,16 +10,17 @@ const log = std.log.scoped(.game_sidebar);
 pub fn gameSidebar() void {
     var scroll = dvui.scrollArea(@src(), .{}, .{ .background = false, .expand = .horizontal });
     defer scroll.deinit();
-
     for (store.gamesStore.games.items, 0..) |game, index| {
-        const isSelected = components.game_button(
+        var isSelected = store.gamesStore.selectedGame == &store.gamesStore.games.items[index];
+
+        isSelected = components.game_button(
             @src(),
             game.name[0..],
             game.icon,
             .{
                 .gravity_x = 0,
                 .gravity_y = 0.5,
-                .button_init_options = .{ .grayed = game.installed_location == null },
+                .button_init_options = .{ .grayed = game.installed_location == null, .draw_focus = false },
             },
             .{
                 .box_options = .{ .id_extra = index, .expand = .horizontal },
@@ -28,8 +29,10 @@ pub fn gameSidebar() void {
                     .id_extra = index,
                     .margin = .all(0),
                     .corners = .all(0),
-                    .background = false,
                     .expand = .both,
+                    .background = true,
+                    .color_fill_press = .{ .a = 100 },
+                    .color_fill = if (isSelected) .{ .a = 100 } else null,
                 },
             },
         );
