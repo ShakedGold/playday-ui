@@ -9,7 +9,7 @@ pub fn gamePage(allocator: std.mem.Allocator, io: std.Io, game: *const playday_a
     dvui.label(@src(), "Playtime: {d}", .{game.playtime}, .{});
     dvui.label(@src(), "Installed Directory: {s}", .{if (game.installed_location != null) game.installed_location.? else ""}, .{});
 
-    const run = dvui.button(@src(), "Run", .{}, .{});
+    const run = dvui.button(@src(), if (game.installed_location != null) "Run" else "Install", .{}, .{});
     if (run) {
         const game_url = try std.fmt.allocPrint(
             allocator,
