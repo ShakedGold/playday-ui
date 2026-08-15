@@ -13,6 +13,17 @@ pub fn init(io: std.Io, allocator: std.mem.Allocator) !void {
     try games.appendSlice(allocator, dbGames.items);
 }
 
+pub fn addGame(game: *playday_api.models.game.Game, io: std.Io, allocator: std.mem.Allocator) !void {
+    for (games.items) |*storeGame| {
+        if (std.mem.eql(u8, game.id, storeGame.id)) {
+            return error.DuplicatedGame;
+        }
+    }
+
+    try game.insert(io, allocator);
+    try games.append(allocator, game.*);
+}
+
 /// Returns an slice of the items that were duplicated, the caller owns the slice
 pub fn extendGames(addedGames: []playday_api.models.game.Game, io: std.Io, allocator: std.mem.Allocator) ![]playday_api.models.game.Game {
     var duplicatedGames: std.ArrayList(playday_api.models.game.Game) = .empty;

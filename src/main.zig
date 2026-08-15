@@ -64,15 +64,7 @@ pub fn renderFrameWindow() !dvui.App.Result {
         }
 
         if (should_refresh_steam_games) {
-            var webApiGames = try store.steamStore.library.getGames(initGlobal.gpa);
-            defer webApiGames.deinit(initGlobal.gpa);
-
-            const duplicateGames = try store.gamesStore.extendGames(webApiGames.items, initGlobal.io, initGlobal.gpa);
-            for (duplicateGames) |*game| {
-                game.deinit(initGlobal.gpa);
-            }
-
-            initGlobal.gpa.free(duplicateGames);
+            try store.steamStore.refreshGames(initGlobal.io, initGlobal.gpa);
         }
     }
 
@@ -91,5 +83,5 @@ pub fn deinitWindow(window: *dvui.Window) void {
 
     store.assetsStore.deinit(initGlobal.gpa);
     store.gamesStore.deinit(initGlobal.gpa);
-    store.steamStore.deinit();
+    store.steamStore.deinit(initGlobal.io);
 }
