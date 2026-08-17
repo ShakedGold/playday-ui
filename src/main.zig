@@ -56,10 +56,7 @@ pub fn renderFrameWindow() !dvui.App.Result {
     if (panedWidget.showSecond()) {
         const should_refresh_steam_games = dvui.button(@src(), "Refresh Steam Games", .{}, .{ .gravity_x = 1.0 });
 
-        if (store.gamesStore.selectedGame == null) {
-            var box = dvui.box(@src(), .{ .dir = .vertical }, .{ .expand = .both, .background = false });
-            defer box.deinit();
-        } else {
+        if (store.gamesStore.selectedGame != null) {
             try components.gamePage(store.gamesStore.selectedGame.?);
         }
 
