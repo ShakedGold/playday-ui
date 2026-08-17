@@ -37,7 +37,7 @@
             .hash = "dvui-0.5.0-dev-AQFJmSb5-wALKrEImMEmV94UW4PBQ2foRYIIBuTL9UGt",
         },
         .playday_api = .{
-            .path = "../api",
+            .path = "../playday-api",
         },
     },
     .paths = .{

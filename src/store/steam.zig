@@ -40,3 +40,7 @@ fn refreshGamesTask(io: std.Io, allocator: std.mem.Allocator) void {
 pub fn refreshGames(io: std.Io, allocator: std.mem.Allocator) !void {
     try gameTaskGroup.concurrent(io, refreshGamesTask, .{ io, allocator });
 }
+
+pub fn run(game: *const playday_api.models.game.Game) !void {
+    return local.run(game);
+}

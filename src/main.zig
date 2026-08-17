@@ -60,7 +60,7 @@ pub fn renderFrameWindow() !dvui.App.Result {
             var box = dvui.box(@src(), .{ .dir = .vertical }, .{ .expand = .both, .background = false });
             defer box.deinit();
         } else {
-            try components.gamePage(initGlobal.gpa, initGlobal.io, store.gamesStore.selectedGame.?);
+            try components.gamePage(store.gamesStore.selectedGame.?);
         }
 
         if (should_refresh_steam_games) {
