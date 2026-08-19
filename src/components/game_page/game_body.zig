@@ -1,10 +1,10 @@
 const std = @import("std");
-const dvui = @import("dvui");
 
+const dvui = @import("dvui");
 const playday_api = @import("playday_api");
 const store = @import("store");
 
-pub fn details(game: *const playday_api.models.game.Game) !void {
+pub fn details(game: *const playday_api.models.game.Game, io: std.Io, allocator: std.mem.Allocator) !void {
     var detailsBox = dvui.box(@src(), .{}, .{
         .background = true,
         .color_fill = .opacity(.gray, 0.8),
@@ -30,7 +30,7 @@ pub fn details(game: *const playday_api.models.game.Game) !void {
         });
 
         if (run) {
-            try store.steamStore.run(game);
+            try store.gamesStore.run(game, io, allocator);
         }
     }
 }

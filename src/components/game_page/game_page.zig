@@ -1,13 +1,13 @@
 const std = @import("std");
+
 const dvui = @import("dvui");
-
-const store = @import("store");
 const playday_api = @import("playday_api");
+const store = @import("store");
 
-const game_header = @import("game_header.zig");
 const game_body = @import("game_body.zig");
+const game_header = @import("game_header.zig");
 
-pub fn gamePage(game: *const playday_api.models.game.Game) !void {
+pub fn gamePage(game: *const playday_api.models.game.Game, io: std.Io, allocator: std.mem.Allocator) !void {
     var scroll = dvui.scrollArea(@src(), .{}, .{ .background = false, .expand = .horizontal });
     defer scroll.deinit();
 
@@ -23,7 +23,7 @@ pub fn gamePage(game: *const playday_api.models.game.Game) !void {
         defer content.deinit();
 
         game_header.banner(game);
-        try game_body.details(game);
+        try game_body.details(game, io, allocator);
     }
 }
 

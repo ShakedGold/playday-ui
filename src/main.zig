@@ -1,11 +1,11 @@
 const std = @import("std");
-const dvui = @import("dvui");
-
-const playday_api = @import("playday_api");
-const components = @import("components");
-const store = @import("store");
-
 const Io = std.Io;
+
+const components = @import("components");
+const dvui = @import("dvui");
+pub const panic = dvui.App.panic;
+const playday_api = @import("playday_api");
+const store = @import("store");
 
 var initGlobal: std.process.Init = undefined;
 
@@ -31,11 +31,6 @@ pub fn main(init: std.process.Init) !u8 {
     return dvui.App.main(init);
 }
 
-pub const panic = dvui.App.panic;
-pub const std_options: std.Options = .{
-    .logFn = dvui.App.logFn,
-};
-
 pub fn renderFrameWindow() !dvui.App.Result {
     const panedWidget = dvui.paned(@src(), .{
         .direction = .horizontal,
@@ -54,14 +49,14 @@ pub fn renderFrameWindow() !dvui.App.Result {
     }
 
     if (panedWidget.showSecond()) {
-        const should_refresh_steam_games = dvui.button(@src(), "Refresh Steam Games", .{}, .{ .gravity_x = 1.0 });
+        const should_refresh_games = dvui.button(@src(), "Refresh Steam Games", .{}, .{ .gravity_x = 1.0 });
 
         if (store.gamesStore.selectedGame != null) {
-            try components.gamePage(store.gamesStore.selectedGame.?);
+            try components.gamePage(store.gamesStore.selectedGame.?, initGlobal.io, initGlobal.gpa);
         }
 
-        if (should_refresh_steam_games) {
-            try store.steamStore.refreshGames(initGlobal.io, initGlobal.gpa);
+        if (should_refresh_games) {
+            try store.gamesStore.refresh(initGlobal.io, initGlobal.gpa);
         }
     }
 
@@ -72,16 +67,12 @@ pub fn initWindow(window: *dvui.Window) !void {
     _ = window; //autofix
 
     try store.assetsStore.init(initGlobal.io, initGlobal.gpa);
-    try store.steamStore.init(initGlobal, "3FEFC8754FB970CDCED1C085DE770699", "76561198369990015");
-    try store.gamesStore.init(initGlobal.io, initGlobal.gpa);
-    try store.metadataStore.init(initGlobal.gpa, initGlobal.io);
+    try store.gamesStore.init(initGlobal.io, initGlobal.gpa, initGlobal.environ_map);
 }
 
 pub fn deinitWindow(window: *dvui.Window) void {
-    _ = window; //autofix
+    _ = window; // autofix
 
     store.assetsStore.deinit(initGlobal.gpa);
     store.gamesStore.deinit(initGlobal.gpa);
-    store.steamStore.deinit(initGlobal.io);
-    store.metadataStore.deinit(initGlobal.gpa);
 }
