@@ -70,9 +70,11 @@ pub fn renderFrameWindow() !dvui.App.Result {
 
 pub fn initWindow(window: *dvui.Window) !void {
     _ = window; //autofix
+
     try store.assetsStore.init(initGlobal.io, initGlobal.gpa);
     try store.steamStore.init(initGlobal, "3FEFC8754FB970CDCED1C085DE770699", "76561198369990015");
     try store.gamesStore.init(initGlobal.io, initGlobal.gpa);
+    try store.metadataStore.init(initGlobal.gpa, initGlobal.io);
 }
 
 pub fn deinitWindow(window: *dvui.Window) void {
@@ -81,4 +83,5 @@ pub fn deinitWindow(window: *dvui.Window) void {
     store.assetsStore.deinit(initGlobal.gpa);
     store.gamesStore.deinit(initGlobal.gpa);
     store.steamStore.deinit(initGlobal.io);
+    store.metadataStore.deinit(initGlobal.gpa);
 }

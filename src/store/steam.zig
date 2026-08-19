@@ -2,6 +2,8 @@ const std = @import("std");
 const playday_api = @import("playday_api");
 const store = @import("root.zig");
 
+const log = std.log.scoped(.steam_store);
+
 var gameTaskGroup: std.Io.Group = .init;
 
 var api: playday_api.libraries.steam.web_api.SteamAPI = undefined;
@@ -35,6 +37,10 @@ fn refreshGamesTask(io: std.Io, allocator: std.mem.Allocator) void {
             };
         }
     }
+
+    store.metadataStore.refreshMetadata(store.gamesStore.games.items, allocator, io) catch |err| {
+        log.err("Error while refreshing metadata: {}", .{err});
+    };
 }
 
 pub fn refreshGames(io: std.Io, allocator: std.mem.Allocator) !void {

@@ -16,7 +16,7 @@ pub fn gameSidebar() void {
         isSelected = components.game_button(
             @src(),
             game.name[0..],
-            game.icon,
+            null, // TODO: add back icon
             .{
                 .gravity_x = 0,
                 .gravity_y = 0.5,
