@@ -106,6 +106,5 @@ pub fn build(b: *std.Build) void {
     components_module.addImport("store", store_module);
     components_module.addImport("dvui", dvui_dep.module("dvui_sdl3"));
     components_module.addImport("playday_api", playday_api.module("playday-api"));
-
     exe.root_module.addImport("components", components_module);
 }

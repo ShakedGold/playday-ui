@@ -14,7 +14,7 @@ pub fn gamePage(game: *const playday_api.models.game.Game, io: std.Io, allocator
     var overlay = dvui.overlay(@src(), .{ .expand = .both });
     defer overlay.deinit();
 
-    gameBackground(game);
+    try gameBackground(game);
 
     {
         var content = dvui.box(@src(), .{ .dir = .vertical }, .{
@@ -27,27 +27,38 @@ pub fn gamePage(game: *const playday_api.models.game.Game, io: std.Io, allocator
     }
 }
 
-fn gameBackground(game: *const playday_api.models.game.Game) void {
-    _ = game; // autofix
-
+fn gameBackground(game: *const playday_api.models.game.Game) !void {
     {
         var background = dvui.box(@src(), .{}, .{
             .background = true,
             .color_fill = .blue,
-            .min_size_content = .height(10000), // TODO: Remove
             .expand = .both,
         });
         defer background.deinit();
     }
 
     {
-        // TODO: Add the game's hero as an image and set the shrink to .ratio, based on the horizontal space left
-        var hero = dvui.box(@src(), .{}, .{
+        var box = dvui.box(@src(), .{}, .{
+            .expand = .both,
             .background = true,
-            .color_fill = .red,
-            .min_size_content = .height(1240), // TODO: Remove
-            .expand = .horizontal,
+            .color_fill = .black,
         });
-        defer hero.deinit();
+        defer box.deinit();
+
+        if (game.hero) |hero| {
+            const source: dvui.ImageSource = .{ .imageFile = .{ .bytes = hero } };
+
+            _ = dvui.image(
+                @src(),
+                .{
+                    .source = source,
+                    .shrink = .none,
+                },
+                .{
+                    .gravity_x = 0.5,
+                    .max_size_content = .height(box.wd.rect.h),
+                },
+            );
+        }
     }
 }

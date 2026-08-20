@@ -49,14 +49,24 @@ pub fn renderFrameWindow() !dvui.App.Result {
     }
 
     if (panedWidget.showSecond()) {
-        const should_refresh_games = dvui.button(@src(), "Refresh Steam Games", .{}, .{ .gravity_x = 1.0 });
+        {
+            const box = dvui.box(@src(), .{ .dir = .horizontal }, .{ .expand = .horizontal });
+            defer box.deinit();
+
+            const should_refresh_games = dvui.button(@src(), "Refresh Games", .{}, .{ .gravity_x = 1.0 });
+            const should_refresh_metadata = dvui.button(@src(), "Refresh Metadata", .{}, .{ .gravity_x = 1.0 });
+
+            if (should_refresh_games) {
+                try store.gamesStore.refresh(initGlobal.io, initGlobal.gpa);
+            }
+
+            if (should_refresh_metadata) {
+                try store.gamesStore.refreshMetadata(initGlobal.io, initGlobal.gpa);
+            }
+        }
 
         if (store.gamesStore.selectedGame != null) {
             try components.gamePage(store.gamesStore.selectedGame.?, initGlobal.io, initGlobal.gpa);
-        }
-
-        if (should_refresh_games) {
-            try store.gamesStore.refresh(initGlobal.io, initGlobal.gpa);
         }
     }
 
@@ -67,7 +77,10 @@ pub fn initWindow(window: *dvui.Window) !void {
     _ = window; //autofix
 
     try store.assetsStore.init(initGlobal.io, initGlobal.gpa);
+    errdefer store.assetsStore.deinit(initGlobal.gpa);
+
     try store.gamesStore.init(initGlobal.io, initGlobal.gpa, initGlobal.environ_map);
+    errdefer store.gamesStore.deinit(initGlobal.gpa);
 }
 
 pub fn deinitWindow(window: *dvui.Window) void {

@@ -1,9 +1,10 @@
 const std = @import("std");
 
 const dvui = @import("dvui");
-const components = @import("root.zig");
-const store = @import("store");
 const playday_api = @import("playday_api");
+const store = @import("store");
+
+const components = @import("root.zig");
 
 const log = std.log.scoped(.game_sidebar);
 
@@ -16,7 +17,7 @@ pub fn gameSidebar() void {
         isSelected = components.game_button(
             @src(),
             game.name[0..],
-            null, // TODO: add back icon
+            game.icon,
             .{
                 .gravity_x = 0,
                 .gravity_y = 0.5,

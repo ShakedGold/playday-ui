@@ -5,6 +5,7 @@ const playday_api = @import("playday_api");
 const log = std.log.scoped(.game_store);
 
 var libraries: std.ArrayList(playday_api.libraries.library.Library) = .empty;
+var metadataProviders: std.ArrayList(playday_api.metadata.MetadataProvider) = .empty;
 
 pub var games: std.ArrayList(playday_api.models.game.Game) = .empty;
 pub var selectedGame: ?*const playday_api.models.game.Game = null;
@@ -29,6 +30,10 @@ pub fn init(io: std.Io, allocator: std.mem.Allocator, environ_map: *std.process.
     local = try .init(io, allocator, environ_map);
 
     try libraries.append(allocator, .init(.steam, .{ &api, &local }));
+
+    // TODO: Find a way to add providers
+    // TODO: Remove
+    try metadataProviders.append(allocator, try .init(io, allocator, .steam_store));
 }
 
 pub fn deinit(allocator: std.mem.Allocator) void {
@@ -47,6 +52,12 @@ pub fn deinit(allocator: std.mem.Allocator) void {
     }
 
     libraries.deinit(allocator);
+
+    for (metadataProviders.items) |*provider| {
+        provider.deinit();
+    }
+
+    metadataProviders.deinit(allocator);
 }
 
 fn refreshLibrary(library: *playday_api.libraries.library.Library, io: std.Io, allocator: std.mem.Allocator) !void {
@@ -54,7 +65,11 @@ fn refreshLibrary(library: *playday_api.libraries.library.Library, io: std.Io, a
     defer allocator.free(retrievedGames);
 
     const duplicatedGames = try extend(retrievedGames, io, allocator);
-    defer allocator.free(duplicatedGames);
+
+    for (duplicatedGames) |*game| {
+        game.deinit(allocator);
+    }
+    allocator.free(duplicatedGames);
 }
 
 fn refreshGamesTask(library: *playday_api.libraries.library.Library, io: std.Io, allocator: std.mem.Allocator) void {
@@ -96,6 +111,26 @@ pub fn extend(addedGames: []?playday_api.models.game.Game, io: std.Io, allocator
     return duplicatedGames.toOwnedSlice(allocator);
 }
 
-pub fn run(game: *const playday_api.models.game.Game, io: std.Io, allocator: std.mem.Allocator) !void {
-    try game.library.run(io, allocator, game);
+fn refreshMetadataTask(io: std.Io, allocator: std.mem.Allocator, game: *playday_api.models.game.Game, index: usize) void {
+    _ = index;
+
+    for (metadataProviders.items) |*provider| {
+        var gameRefresher = provider.refresher(game, io, allocator);
+        defer gameRefresher.deinit();
+
+        _ = gameRefresher.refreshLogo() catch {};
+        _ = gameRefresher.refreshIcon() catch {};
+        _ = gameRefresher.refreshHero() catch {};
+        _ = gameRefresher.refreshGrid() catch {};
+        _ = gameRefresher.refreshDescription() catch {};
+    }
+}
+
+pub fn refreshMetadata(io: std.Io, allocator: std.mem.Allocator) !void {
+    const concurrency: playday_api.utils.async.BoundedConcurrency(playday_api.models.game.Game) = .{
+        .batch_size = 25,
+        .items = games.items,
+    };
+
+    try concurrency.processAll(io, refreshMetadataTask, .{ io, allocator });
 }
