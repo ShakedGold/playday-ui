@@ -158,7 +158,11 @@ pub fn details(game: *const playday_api.models.game.Game) void {
                 .background = false,
                 // Reserve room for a line of text plus the horizontal scrollbar,
                 // otherwise the scrollbar shrinks the viewport and clips the text.
-                .min_size_content = .height(dvui.themeGet().font_body.lineHeight() + dvui.ScrollBarWidget.defaults.min_sizeGet().h),
+                // padSize includes the textLayout's default 6px top/bottom
+                // padding, which still applies even with background turned off.
+                .min_size_content = .height(dvui.TextLayoutWidget.defaults.padSize(
+                    .{ .h = dvui.themeGet().font_body.lineHeight() },
+                ).h + dvui.ScrollBarWidget.defaults.min_sizeGet().h),
             });
             defer value_scroll.deinit();
 
