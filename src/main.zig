@@ -9,6 +9,8 @@ const store = @import("store");
 
 var initGlobal: std.process.Init = undefined;
 
+var tasks: std.Io.Group = .init;
+
 pub const dvui_app: dvui.App = .{
     .config = .{
         .options = .{
@@ -32,6 +34,8 @@ pub fn main(init: std.process.Init) !u8 {
 }
 
 pub fn renderFrameWindow() !dvui.App.Result {
+    try components.mainMenu(initGlobal.io, initGlobal.gpa, &tasks);
+
     const panedWidget = dvui.paned(@src(), .{
         .direction = .horizontal,
         .collapsed_size = 0,
@@ -49,22 +53,6 @@ pub fn renderFrameWindow() !dvui.App.Result {
     }
 
     if (panedWidget.showSecond()) {
-        {
-            const box = dvui.box(@src(), .{ .dir = .horizontal }, .{ .expand = .horizontal });
-            defer box.deinit();
-
-            const should_refresh_games = dvui.button(@src(), "Refresh Games", .{}, .{ .gravity_x = 1.0 });
-            const should_refresh_metadata = dvui.button(@src(), "Refresh Metadata", .{}, .{ .gravity_x = 1.0 });
-
-            if (should_refresh_games) {
-                try store.gamesStore.refresh(initGlobal.io, initGlobal.gpa);
-            }
-
-            if (should_refresh_metadata) {
-                try store.gamesStore.refreshMetadata(initGlobal.io, initGlobal.gpa);
-            }
-        }
-
         if (store.gamesStore.selectedGame != null) {
             try components.gamePage(store.gamesStore.selectedGame.?, initGlobal.io, initGlobal.gpa);
         }
@@ -88,4 +76,8 @@ pub fn deinitWindow(window: *dvui.Window) void {
 
     store.assetsStore.deinit(initGlobal.gpa);
     store.gamesStore.deinit(initGlobal.gpa);
+
+    // This is bad, it causes a crash most of the time if while we fetch data we call cancel (e.g. refreshMetadata -> closing the window)
+    // However since it is at the end of everything, it is mostly fine (still is there is a better way to not crash while closing the window, that will be preferable :D)
+    tasks.cancel(initGlobal.io);
 }

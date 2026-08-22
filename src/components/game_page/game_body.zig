@@ -43,11 +43,11 @@ fn formatDate(secondsSinceEpoch: u64, buf: []u8) ![]u8 {
     );
 }
 
-pub fn details(game: *const playday_api.models.game.Game, io: std.Io, allocator: std.mem.Allocator) !void {
+pub fn detailBar(game: *const playday_api.models.game.Game, io: std.Io, allocator: std.mem.Allocator) !void {
     var detailsBox = dvui.box(@src(), .{}, .{
         .background = true,
         .color_fill = .opacity(.gray, 0.8),
-        .expand = .both,
+        .expand = .horizontal,
     });
     defer detailsBox.deinit();
 
@@ -94,4 +94,28 @@ pub fn details(game: *const playday_api.models.game.Game, io: std.Io, allocator:
         dvui.label(@src(), "PLAY TIME", .{}, .{});
         dvui.label(@src(), "{[value]d} {[unit]s}", formatMinutes(game.playtime), .{ .color_text = .fromHex("adadad") });
     }
+}
+
+pub fn description(game: *const playday_api.models.game.Game) !void {
+    const descriptionText = game.description orelse return;
+    var buffer: [2048]u8 = undefined;
+    const slice: []u8 = buffer[0..];
+
+    var descBox = dvui.box(@src(), .{}, .{
+        .expand = .horizontal,
+        .background = true,
+        .color_fill = .opacity(.gray, 0.8),
+    });
+    defer descBox.deinit();
+
+    var textLayout = dvui.textLayout(@src(), .{}, .{ .expand = .horizontal });
+    defer textLayout.deinit();
+
+    const text = try std.fmt.bufPrint(slice, "{s}", .{descriptionText});
+    textLayout.addText(text, .{});
+}
+
+pub fn details(game: *const playday_api.models.game.Game) void {
+    _ = game; // autofix
+    dvui.label(@src(), "Details", .{}, .{});
 }

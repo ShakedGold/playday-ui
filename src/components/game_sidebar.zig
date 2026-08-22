@@ -24,13 +24,12 @@ pub fn gameSidebar() void {
                 .button_init_options = .{ .grayed = game.installed_location == null, .draw_focus = false },
             },
             .{
-                .box_options = .{ .id_extra = index, .expand = .horizontal },
                 .icon_options = .{ .id_extra = index, .max_size_content = .all(35) },
                 .button_options = .{
                     .id_extra = index,
                     .margin = .all(0),
                     .corners = .all(0),
-                    .expand = .both,
+                    .expand = .horizontal,
                     .background = true,
                     .color_fill_press = .{ .a = 100 },
                     .color_fill = if (isSelected) .{ .a = 100 } else null,

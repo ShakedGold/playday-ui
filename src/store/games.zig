@@ -79,15 +79,10 @@ fn refreshGamesTask(library: *playday_api.libraries.library.Library, io: std.Io,
 }
 
 /// Refreshes the games by calling each library's refresh method
-pub fn refresh(io: std.Io, allocator: std.mem.Allocator) !void {
-    var libraryGroups: std.Io.Group = .init;
-    defer libraryGroups.cancel(io);
-
+pub fn refresh(io: std.Io, allocator: std.mem.Allocator, tasks: *std.Io.Group) !void {
     for (libraries.items) |*library| {
-        try libraryGroups.concurrent(io, refreshGamesTask, .{ library, io, allocator });
+        try tasks.concurrent(io, refreshGamesTask, .{ library, io, allocator });
     }
-
-    try libraryGroups.await(io);
 }
 
 /// Returns an slice of the items that were duplicated, the caller owns the slice
@@ -126,11 +121,17 @@ fn refreshMetadataTask(io: std.Io, allocator: std.mem.Allocator, game: *playday_
     }
 }
 
-pub fn refreshMetadata(io: std.Io, allocator: std.mem.Allocator) !void {
+fn refreshMetadataManagerTask(io: std.Io, allocator: std.mem.Allocator) void {
     const concurrency: playday_api.utils.async.BoundedConcurrency(playday_api.models.game.Game) = .{
         .batch_size = 25,
         .items = games.items,
     };
 
-    try concurrency.processAll(io, refreshMetadataTask, .{ io, allocator });
+    concurrency.processAll(io, refreshMetadataTask, .{ io, allocator }) catch |err| {
+        log.err("Error while processing refresh metadata tasks: {}", .{err});
+    };
+}
+
+pub fn refreshMetadata(io: std.Io, allocator: std.mem.Allocator, tasks: *std.Io.Group) !void {
+    tasks.async(io, refreshMetadataManagerTask, .{ io, allocator });
 }
