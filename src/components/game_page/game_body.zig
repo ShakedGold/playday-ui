@@ -97,18 +97,14 @@ pub fn detailBar(game: *const playday_api.models.game.Game, io: std.Io, allocato
 }
 
 pub fn description(game: *const playday_api.models.game.Game) !void {
+    var descBox = dvui.box(@src(), .{}, .{ .expand = .both });
+    defer descBox.deinit();
+
     const descriptionText = game.description orelse return;
     var buffer: [2048]u8 = undefined;
     const slice: []u8 = buffer[0..];
 
-    var descBox = dvui.box(@src(), .{}, .{
-        .expand = .horizontal,
-        .background = true,
-        .color_fill = .opacity(.gray, 0.8),
-    });
-    defer descBox.deinit();
-
-    var textLayout = dvui.textLayout(@src(), .{}, .{ .expand = .horizontal });
+    var textLayout = dvui.textLayout(@src(), .{}, .{ .expand = .both });
     defer textLayout.deinit();
 
     const text = try std.fmt.bufPrint(slice, "{s}", .{descriptionText});
@@ -116,6 +112,59 @@ pub fn description(game: *const playday_api.models.game.Game) !void {
 }
 
 pub fn details(game: *const playday_api.models.game.Game) void {
-    _ = game; // autofix
+    var detailsBox = dvui.box(@src(), .{}, .{
+        .expand = .both,
+        .background = true,
+    });
+    defer detailsBox.deinit();
+
     dvui.label(@src(), "Details", .{}, .{});
+
+    var col_widths: [2]f32 = @splat(0);
+
+    var grid = dvui.grid(@src(), .colWidths(&col_widths), .{}, .{
+        .expand = .horizontal,
+        .background = false,
+        .corners = .{ .tl = .square, .tr = .square, .br = .square, .bl = .square },
+    });
+    defer grid.deinit();
+
+    // Both columns share the width equally.
+    dvui.columnLayoutProportional(&.{ -1, -1 }, &col_widths, grid.data().contentRect().w);
+
+    const Field = struct { name: []const u8, value: []const u8 };
+
+    const fields = [_]Field{
+        .{ .name = "Library", .value = @tagName(game.library) },
+        .{ .name = "Installed Location", .value = game.installed_location orelse "Not Installed" },
+    };
+
+    for (fields, 0..) |field, row_num| {
+        {
+            var cell = grid.bodyCell(@src(), .colRow(0, row_num), .{});
+            defer cell.deinit();
+
+            var name_text = dvui.textLayout(@src(), .{}, .{ .expand = .both, .background = false });
+            defer name_text.deinit();
+            name_text.addText(field.name, .{ .color_text = .fromHex("adadad") });
+        }
+
+        {
+            var cell = grid.bodyCell(@src(), .colRow(1, row_num), .{});
+            defer cell.deinit();
+
+            var value_scroll = dvui.scrollArea(@src(), .{ .horizontal = .auto, .vertical = .none }, .{
+                .expand = .both,
+                .background = false,
+                // Reserve room for a line of text plus the horizontal scrollbar,
+                // otherwise the scrollbar shrinks the viewport and clips the text.
+                .min_size_content = .height(dvui.themeGet().font_body.lineHeight() + dvui.ScrollBarWidget.defaults.min_sizeGet().h),
+            });
+            defer value_scroll.deinit();
+
+            var value_text = dvui.textLayout(@src(), .{}, .{ .expand = .both, .background = false });
+            defer value_text.deinit();
+            value_text.addText(field.value, .{});
+        }
+    }
 }

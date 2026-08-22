@@ -9,6 +9,10 @@ const store = @import("store");
 
 var initGlobal: std.process.Init = undefined;
 
+/// Split position of the sidebar pane [0-1] of the window width.
+/// Starts at 10%, and is kept at 5% minimum by clamping after event processing.
+var sidebar_split: f32 = 0.10;
+
 var tasks: std.Io.Group = .init;
 
 pub const dvui_app: dvui.App = .{
@@ -36,16 +40,19 @@ pub fn main(init: std.process.Init) !u8 {
 pub fn renderFrameWindow() !dvui.App.Result {
     try components.mainMenu(initGlobal.io, initGlobal.gpa, &tasks);
 
-    const panedWidget = dvui.paned(@src(), .{
-        .direction = .horizontal,
-        .collapsed_size = 0,
-        .autofit_first = .{
-            .min_split = 0.2, // First pane at least 20% of total width
-            .min_size = 100, // First pane at least 100 logical pixels
+    const panedWidget = dvui.paned(
+        @src(),
+        .{
+            .direction = .horizontal,
+            .collapsed_size = 0,
+            .split_ratio = &sidebar_split,
         },
-    }, .{
-        .expand = .both,
-    });
+        .{
+            .expand = .both,
+            .background = true,
+        },
+    );
+    sidebar_split = @max(sidebar_split, 0.15);
     defer panedWidget.deinit();
 
     if (panedWidget.showFirst()) {

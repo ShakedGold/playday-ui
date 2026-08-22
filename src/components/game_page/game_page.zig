@@ -29,12 +29,12 @@ pub fn gamePage(game: *const playday_api.models.game.Game, io: std.Io, allocator
 
     try game_body.detailBar(game, io, allocator);
 
-    const bodyBox = dvui.box(@src(), .{ .dir = .horizontal }, .{});
+    const bodyBox = dvui.box(@src(), .{ .dir = .horizontal, .equal_space = true }, .{ .expand = .horizontal });
     defer bodyBox.deinit();
 
     {
-        game_body.details(game);
         try game_body.description(game);
+        game_body.details(game);
     }
 }
 
