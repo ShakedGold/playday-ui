@@ -33,7 +33,11 @@ pub fn init(io: std.Io, allocator: std.mem.Allocator, environ_map: *std.process.
 
     // TODO: Find a way to add providers
     // TODO: Remove
-    try metadataProviders.append(allocator, try .init(io, allocator, .steam_store));
+    const igdb_secret = environ_map.get("IGDB_SECRET") orelse return error.IGDBSecretNotFound;
+    const igdb_id = environ_map.get("IGDB_ID") orelse return error.IGDBIdNotFound;
+
+    // try metadataProviders.append(allocator, .init(io, allocator, .steam_store, .{}));
+    try metadataProviders.append(allocator, .init(io, allocator, .igdb, .{ .id = igdb_id, .secret = igdb_secret }));
 }
 
 pub fn deinit(allocator: std.mem.Allocator) void {
@@ -106,32 +110,56 @@ pub fn extend(addedGames: []?playday_api.models.game.Game, io: std.Io, allocator
     return duplicatedGames.toOwnedSlice(allocator);
 }
 
-fn refreshMetadataTask(io: std.Io, allocator: std.mem.Allocator, game: *playday_api.models.game.Game, index: usize) void {
+fn refreshMetadataTask(game: *playday_api.models.game.Game, index: usize) void {
     _ = index;
 
     for (metadataProviders.items) |*provider| {
-        var gameRefresher = provider.refresher(game, io, allocator);
+        var gameRefresher = provider.refresher(game);
         defer gameRefresher.deinit();
 
-        _ = gameRefresher.refreshLogo() catch {};
-        _ = gameRefresher.refreshIcon() catch {};
-        _ = gameRefresher.refreshHero() catch {};
-        _ = gameRefresher.refreshGrid() catch {};
-        _ = gameRefresher.refreshDescription() catch {};
+        if (game.logo == null) {
+            _ = gameRefresher.refreshLogo() catch |err| {
+                log.err("Error while fetching description: {}", .{err});
+            };
+        }
+
+        if (game.icon == null) {
+            _ = gameRefresher.refreshIcon() catch |err| {
+                log.err("Error while fetching description: {}", .{err});
+            };
+        }
+
+        if (game.hero == null) {
+            _ = gameRefresher.refreshHero() catch |err| {
+                log.err("Error while fetching description: {}", .{err});
+            };
+        }
+
+        if (game.grid == null) {
+            _ = gameRefresher.refreshGrid() catch |err| {
+                log.err("Error while fetching description: {}", .{err});
+            };
+        }
+
+        if (game.description == null) {
+            _ = gameRefresher.refreshDescription() catch |err| {
+                log.err("Error while fetching description: {}", .{err});
+            };
+        }
     }
 }
 
-fn refreshMetadataManagerTask(io: std.Io, allocator: std.mem.Allocator) void {
+fn refreshMetadataManagerTask(io: std.Io) void {
     const concurrency: playday_api.utils.async.BoundedConcurrency(playday_api.models.game.Game) = .{
         .batch_size = 25,
         .items = games.items,
     };
 
-    concurrency.processAll(io, refreshMetadataTask, .{ io, allocator }) catch |err| {
+    concurrency.processAll(io, refreshMetadataTask, .{}) catch |err| {
         log.err("Error while processing refresh metadata tasks: {}", .{err});
     };
 }
 
-pub fn refreshMetadata(io: std.Io, allocator: std.mem.Allocator, tasks: *std.Io.Group) !void {
-    tasks.async(io, refreshMetadataManagerTask, .{ io, allocator });
+pub fn refreshMetadata(io: std.Io, tasks: *std.Io.Group) !void {
+    tasks.async(io, refreshMetadataManagerTask, .{io});
 }

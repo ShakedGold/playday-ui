@@ -3,7 +3,6 @@ const Io = std.Io;
 
 const components = @import("components");
 const dvui = @import("dvui");
-pub const panic = dvui.App.panic;
 const playday_api = @import("playday_api");
 const store = @import("store");
 
@@ -69,13 +68,13 @@ pub fn renderFrameWindow() !dvui.App.Result {
 }
 
 pub fn initWindow(window: *dvui.Window) !void {
-    _ = window; //autofix
+    _ = window; // autofix
 
-    try store.assetsStore.init(initGlobal.io, initGlobal.gpa);
     errdefer store.assetsStore.deinit(initGlobal.gpa);
+    try store.assetsStore.init(initGlobal.io, initGlobal.gpa);
 
-    try store.gamesStore.init(initGlobal.io, initGlobal.gpa, initGlobal.environ_map);
     errdefer store.gamesStore.deinit(initGlobal.gpa);
+    try store.gamesStore.init(initGlobal.io, initGlobal.gpa, initGlobal.environ_map);
 }
 
 pub fn deinitWindow(window: *dvui.Window) void {
@@ -85,6 +84,6 @@ pub fn deinitWindow(window: *dvui.Window) void {
     store.gamesStore.deinit(initGlobal.gpa);
 
     // This is bad, it causes a crash most of the time if while we fetch data we call cancel (e.g. refreshMetadata -> closing the window)
-    // However since it is at the end of everything, it is mostly fine (still is there is a better way to not crash while closing the window, that will be preferable :D)
+    // However since it is at the end of everything, it is mostly fine (still if there is a better way to not crash while closing the window, that will be preferable :D)
     tasks.cancel(initGlobal.io);
 }

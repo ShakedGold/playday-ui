@@ -14,7 +14,7 @@ fn librarySubMenu(io: std.Io, allocator: std.mem.Allocator, tasks: *std.Io.Group
         }
 
         if (dvui.menuItemLabel(@src(), "Refresh Metadata", .{}, .{ .expand = .horizontal })) |_| {
-            try store.gamesStore.refreshMetadata(io, allocator, tasks);
+            try store.gamesStore.refreshMetadata(io, tasks);
             return true;
         }
     }

@@ -27,7 +27,7 @@ pub fn game_button(src: std.builtin.SourceLocation, label_str: []const u8, icon_
         var hbox = dvui.box(src, .{ .dir = .horizontal }, .{ .expand = .horizontal });
         defer hbox.deinit();
 
-        const icon = if (icon_bytes != null) icon_bytes.? else store.assetsStore.assetFiles.get(.default_icon).?;
+        const icon = if (icon_bytes) |icon| icon else store.assetsStore.assetFiles.get(.default_icon).?;
         _ = dvui.image(
             @src(),
             .{ .source = .{ .imageFile = .{ .bytes = icon, .name = label_str } }, .shrink = .ratio },
