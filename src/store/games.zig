@@ -36,7 +36,7 @@ pub fn init(io: std.Io, allocator: std.mem.Allocator, environ_map: *std.process.
     const igdb_secret = environ_map.get("IGDB_SECRET") orelse return error.IGDBSecretNotFound;
     const igdb_id = environ_map.get("IGDB_ID") orelse return error.IGDBIdNotFound;
 
-    // try metadataProviders.append(allocator, .init(io, allocator, .steam_store, .{}));
+    try metadataProviders.append(allocator, .init(io, allocator, .steam_store, .{}));
     try metadataProviders.append(allocator, .init(io, allocator, .igdb, .{ .id = igdb_id, .secret = igdb_secret }));
 }
 

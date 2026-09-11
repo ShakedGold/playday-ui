@@ -9,11 +9,39 @@ const components = @import("root.zig");
 const log = std.log.scoped(.game_sidebar);
 
 pub fn gameSidebar() void {
+    var searchBuffer: [256]u8 = undefined;
+    var searchableGameNameBuffer: [256]u8 = undefined;
+
+    var search: []u8 = undefined;
+    var gameName: []u8 = undefined;
+
     var scroll = dvui.scrollArea(@src(), .{}, .{ .background = false, .expand = .horizontal });
     defer scroll.deinit();
-    for (store.gamesStore.games.items, 0..) |game, index| {
-        var isSelected = store.gamesStore.selectedGame == &store.gamesStore.games.items[index];
 
+    var searchText: []u8 = undefined;
+
+    {
+        if (store.gamesStore.games.items.len == 0) {
+            return;
+        }
+
+        const searchBar = dvui.textEntry(@src(), .{}, .{ .expand = .horizontal });
+        defer searchBar.deinit();
+
+        searchText = std.mem.sliceTo(searchBar.text, 0);
+        search = std.ascii.lowerString(&searchBuffer, searchText);
+    }
+
+    for (store.gamesStore.games.items, 0..) |game, index| {
+        if (searchText.len > 0) {
+            gameName = std.ascii.lowerString(&searchableGameNameBuffer, game.name);
+            const shouldDisplayGame = if (std.mem.count(u8, gameName, search) > 0) true else false;
+            if (!shouldDisplayGame) {
+                continue;
+            }
+        }
+
+        var isSelected = store.gamesStore.selectedGame == &store.gamesStore.games.items[index];
         isSelected = components.game_button(
             @src(),
             game.name[0..],
