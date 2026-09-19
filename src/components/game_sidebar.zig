@@ -34,7 +34,7 @@ pub fn gameSidebar() void {
 
     for (store.gamesStore.games.items, 0..) |game, index| {
         if (searchText.len > 0) {
-            gameName = std.ascii.lowerString(&searchableGameNameBuffer, game.name);
+            gameName = std.ascii.lowerString(&searchableGameNameBuffer, game.game.name);
             const shouldDisplayGame = if (std.mem.count(u8, gameName, search) > 0) true else false;
             if (!shouldDisplayGame) {
                 continue;
@@ -44,12 +44,12 @@ pub fn gameSidebar() void {
         var isSelected = store.gamesStore.selectedGame == &store.gamesStore.games.items[index];
         isSelected = components.game_button(
             @src(),
-            game.name[0..],
-            game.icon,
+            game.game.name[0..],
+            game.metadata.icon,
             .{
                 .gravity_x = 0,
                 .gravity_y = 0.5,
-                .button_init_options = .{ .grayed = game.installed_location == null, .draw_focus = false },
+                .button_init_options = .{ .grayed = game.game.installed_location == null, .draw_focus = false },
             },
             .{
                 .icon_options = .{ .id_extra = index, .max_size_content = .all(35) },
@@ -66,7 +66,7 @@ pub fn gameSidebar() void {
         );
 
         if (isSelected) {
-            log.debug("selected game = {s}", .{game.name});
+            log.debug("selected game = {s}", .{game.game.name});
             store.gamesStore.selectedGame = &store.gamesStore.games.items[index];
         }
     }

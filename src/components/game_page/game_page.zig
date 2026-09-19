@@ -57,7 +57,7 @@ fn gameBackground(game: *const playday_api.models.game.Game) !void {
         });
         defer box.deinit();
 
-        if (game.hero) |hero| {
+        if (game.metadata.hero) |hero| {
             const hero_box = dvui.box(@src(), .{}, .{
                 .expand = .both,
             });

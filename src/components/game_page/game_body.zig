@@ -60,7 +60,7 @@ pub fn detailBar(game: *const playday_api.models.game.Game, io: std.Io, allocato
         defer statsBox.deinit();
 
         {
-            const run = dvui.button(@src(), if (game.installed_location != null) "Play" else "Install", .{}, .{
+            const run = dvui.button(@src(), if (game.game.installed_location != null) "Play" else "Install", .{}, .{
                 .expand = .vertical,
                 .margin = .all(10),
                 .min_size_content = .width(150),
@@ -69,7 +69,7 @@ pub fn detailBar(game: *const playday_api.models.game.Game, io: std.Io, allocato
             });
 
             if (run) {
-                try game.library.run(io, allocator, game);
+                try game.library.library.run(io, allocator);
             }
         }
 
@@ -82,7 +82,7 @@ pub fn detailBar(game: *const playday_api.models.game.Game, io: std.Io, allocato
             var last_played_buffer: [256]u8 = undefined;
 
             dvui.label(@src(), "LAST PLAYED", .{}, .{});
-            dvui.label(@src(), "{s}", .{if (game.last_played) |last_played| try formatDate(last_played, last_played_buffer[0..]) else "Never"}, .{ .color_text = .fromHex("adadad") });
+            dvui.label(@src(), "{s}", .{if (game.game.last_played) |last_played| try formatDate(last_played, last_played_buffer[0..]) else "Never"}, .{ .color_text = .fromHex("adadad") });
         }
 
         _ = dvui.spacer(@src(), .{ .min_size_content = .width(10) });
@@ -92,12 +92,12 @@ pub fn detailBar(game: *const playday_api.models.game.Game, io: std.Io, allocato
             defer play_time_box.deinit();
 
             dvui.label(@src(), "PLAY TIME", .{}, .{});
-            dvui.label(@src(), "{[value]d} {[unit]s}", formatMinutes(game.playtime), .{ .color_text = .fromHex("adadad") });
+            dvui.label(@src(), "{[value]d} {[unit]s}", formatMinutes(game.game.playtime), .{ .color_text = .fromHex("adadad") });
         }
     }
 
     {
-        if (game.grid) |grid| {
+        if (game.metadata.grid) |grid| {
             const grid_width = 200;
 
             const size = try dvui.imageSize(.{ .imageFile = .{ .bytes = grid } });
@@ -129,7 +129,7 @@ pub fn description(game: *const playday_api.models.game.Game) !void {
     var descBox = dvui.box(@src(), .{}, .{ .expand = .both });
     defer descBox.deinit();
 
-    const descriptionText = game.description orelse return;
+    const descriptionText = game.metadata.description orelse return;
     var buffer: [2048]u8 = undefined;
     const slice: []u8 = buffer[0..];
 
@@ -164,8 +164,8 @@ pub fn details(game: *const playday_api.models.game.Game) void {
     const Field = struct { name: []const u8, value: []const u8 };
 
     const fields = [_]Field{
-        .{ .name = "Library", .value = @tagName(game.library) },
-        .{ .name = "Installed Location", .value = game.installed_location orelse "Not Installed" },
+        .{ .name = "Library", .value = @tagName(game.library.library) },
+        .{ .name = "Installed Location", .value = game.game.installed_location orelse "Not Installed" },
     };
 
     for (fields, 0..) |field, row_num| {

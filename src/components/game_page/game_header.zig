@@ -11,7 +11,7 @@ pub fn banner(game: *const playday_api.models.game.Game) void {
     });
     defer bannerBox.deinit();
 
-    if (game.logo) |logo| {
+    if (game.metadata.logo) |logo| {
         _ = dvui.image(
             @src(),
             .{ .source = .{ .imageFile = .{ .bytes = logo } }, .shrink = .ratio },
@@ -22,7 +22,7 @@ pub fn banner(game: *const playday_api.models.game.Game) void {
             },
         );
     } else {
-        dvui.label(@src(), "{s}", .{game.name}, .{
+        dvui.label(@src(), "{s}", .{game.game.name}, .{
             .gravity_x = 0.5,
             .gravity_y = 0.5,
         });

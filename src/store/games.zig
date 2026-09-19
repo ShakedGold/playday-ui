@@ -15,10 +15,10 @@ var api: playday_api.libraries.steam.web_api.SteamAPI = undefined;
 var local: playday_api.libraries.steam.local.SteamLocal = undefined;
 
 pub fn init(io: std.Io, allocator: std.mem.Allocator, environ_map: *std.process.Environ.Map) !void {
-    var dbGames = try playday_api.models.game.getGames(allocator, io);
-    defer dbGames.deinit(allocator);
+    const dbGames = try playday_api.models.game.getGames(allocator, io);
+    defer allocator.free(dbGames);
 
-    try games.appendSlice(allocator, dbGames.items);
+    try games.appendSlice(allocator, dbGames);
 
     // TODO: Find a way to add libraries
     // TODO: Remove
@@ -96,7 +96,8 @@ pub fn extend(addedGames: []?playday_api.models.game.Game, io: std.Io, allocator
     gameLoop: for (addedGames) |*game| {
         if (game.*) |*currentGame| {
             for (games.items) |*storeGame| {
-                if (std.mem.eql(u8, currentGame.id, storeGame.id)) {
+                if (std.mem.eql(u8, currentGame.game.id, storeGame.game.id)) {
+                    log.warn("duplicated game id: {s} [{s}], first: {s}, second: {s}", .{ currentGame.game.id, storeGame.game.id, currentGame.game.name, storeGame.game.name });
                     try duplicatedGames.append(allocator, currentGame.*);
                     continue :gameLoop;
                 }
@@ -117,31 +118,31 @@ fn refreshMetadataTask(game: *playday_api.models.game.Game, index: usize) void {
         var gameRefresher = provider.refresher(game);
         defer gameRefresher.deinit();
 
-        if (game.logo == null) {
+        if (game.metadata.logo == null) {
             _ = gameRefresher.refreshLogo() catch |err| {
-                log.err("Error while fetching description: {}", .{err});
+                log.err("Error while fetching logo: {}", .{err});
             };
         }
 
-        if (game.icon == null) {
+        if (game.metadata.icon == null) {
             _ = gameRefresher.refreshIcon() catch |err| {
-                log.err("Error while fetching description: {}", .{err});
+                log.err("Error while fetching icon: {}", .{err});
             };
         }
 
-        if (game.hero == null) {
+        if (game.metadata.hero == null) {
             _ = gameRefresher.refreshHero() catch |err| {
-                log.err("Error while fetching description: {}", .{err});
+                log.err("Error while fetching hero: {}", .{err});
             };
         }
 
-        if (game.grid == null) {
+        if (game.metadata.grid == null) {
             _ = gameRefresher.refreshGrid() catch |err| {
-                log.err("Error while fetching description: {}", .{err});
+                log.err("Error while fetching grid: {}", .{err});
             };
         }
 
-        if (game.description == null) {
+        if (game.metadata.description == null) {
             _ = gameRefresher.refreshDescription() catch |err| {
                 log.err("Error while fetching description: {}", .{err});
             };
