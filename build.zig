@@ -38,7 +38,7 @@ pub fn build(b: *std.Build) void {
     // If neither case applies to you, feel free to delete the declaration you
     // don't need and to put everything under a single module.
     const exe = b.addExecutable(.{
-        .name = "ui",
+        .name = "playday-ui",
         .root_module = b.createModule(.{
             // b.createModule defines a new module just like b.addModule but,
             // unlike b.addModule, it does not expose the module to consumers of
@@ -91,13 +91,23 @@ pub fn build(b: *std.Build) void {
     const dvui_dep = b.dependency("dvui", .{ .target = target, .optimize = optimize, .backend = .sdl3 });
     exe.root_module.addImport("dvui", dvui_dep.module("dvui_sdl3"));
 
-    const playday_api = b.dependency("playday_api", .{});
-    exe.root_module.addImport("playday_api", playday_api.module("playday-api"));
+    const use_local_deps = b.option(
+        bool,
+        "local-deps",
+        "Use local development dependencies",
+    ) orelse false;
+
+    const playday_api = if (use_local_deps)
+        b.dependency("playday_api_local", .{}).module("playday-api")
+    else
+        b.dependency("playday_api", .{}).module("playday-api");
+
+    exe.root_module.addImport("playday_api", playday_api);
 
     const store_module = b.addModule("store", .{
         .root_source_file = b.path("src/store/root.zig"),
     });
-    store_module.addImport("playday_api", playday_api.module("playday-api"));
+    store_module.addImport("playday_api", playday_api);
     exe.root_module.addImport("store", store_module);
 
     const components_module = b.addModule("components", .{
@@ -105,6 +115,6 @@ pub fn build(b: *std.Build) void {
     });
     components_module.addImport("store", store_module);
     components_module.addImport("dvui", dvui_dep.module("dvui_sdl3"));
-    components_module.addImport("playday_api", playday_api.module("playday-api"));
+    components_module.addImport("playday_api", playday_api);
     exe.root_module.addImport("components", components_module);
 }
