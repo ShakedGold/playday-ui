@@ -98,9 +98,9 @@ pub fn build(b: *std.Build) void {
     ) orelse false;
 
     const playday_api = if (use_local_deps)
-        b.dependency("playday_api_local", .{}).module("playday-api")
+        b.dependency("playday_api_local", .{ .@"local-deps" = use_local_deps }).module("playday-api")
     else
-        b.dependency("playday_api", .{}).module("playday-api");
+        b.dependency("playday_api", .{ .@"local-deps" = use_local_deps }).module("playday-api");
 
     exe.root_module.addImport("playday_api", playday_api);
 

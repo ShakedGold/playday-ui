@@ -10,10 +10,6 @@ var metadataProviders: std.ArrayList(playday_api.metadata.MetadataProvider) = .e
 pub var games: std.ArrayList(playday_api.models.game.Game) = .empty;
 pub var selectedGame: ?*const playday_api.models.game.Game = null;
 
-// TODO: remove
-var api: playday_api.libraries.steam.web_api.SteamAPI = undefined;
-var local: playday_api.libraries.steam.local.SteamLocal = undefined;
-
 pub fn init(io: std.Io, allocator: std.mem.Allocator, environ_map: *std.process.Environ.Map) !void {
     const dbGames = try playday_api.models.game.getGames(allocator, io);
     defer allocator.free(dbGames);
@@ -26,10 +22,21 @@ pub fn init(io: std.Io, allocator: std.mem.Allocator, environ_map: *std.process.
     const steam_key = environ_map.get("STEAM_KEY") orelse return error.SteamKeyNotFound;
     const steam_id = environ_map.get("STEAM_ID") orelse return error.SteamIdNotFound;
 
-    api = .init(io, allocator, steam_key, steam_id);
-    local = try .init(io, allocator, environ_map);
-
-    try libraries.append(allocator, .init(.steam, .{ &api, &local }));
+    try libraries.append(
+        allocator,
+        try .init(
+            .steam,
+            .{
+                io, allocator,
+                @as(playday_api.libraries.steam.library.SteamLibraryOptions, .{
+                    .key = steam_key,
+                    .steamid = steam_id,
+                    .environ_map = environ_map,
+                }),
+            },
+        ),
+    );
+    try libraries.append(allocator, try .init(.gog, .{ io, allocator, @as(playday_api.libraries.gog.web_api.GOGWebAPIOptions, .{}) }));
 
     // TODO: Find a way to add providers
     // TODO: Remove
@@ -69,11 +76,11 @@ fn refreshLibrary(library: *playday_api.libraries.library.Library, io: std.Io, a
     defer allocator.free(retrievedGames);
 
     const duplicatedGames = try extend(retrievedGames, io, allocator);
+    defer allocator.free(duplicatedGames);
 
     for (duplicatedGames) |*game| {
         game.deinit(allocator);
     }
-    allocator.free(duplicatedGames);
 }
 
 fn refreshGamesTask(library: *playday_api.libraries.library.Library, io: std.Io, allocator: std.mem.Allocator) void {

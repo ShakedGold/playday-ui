@@ -70,9 +70,6 @@ pub fn renderFrameWindow() !dvui.App.Result {
 pub fn initWindow(window: *dvui.Window) !void {
     _ = window; // autofix
 
-    errdefer store.assetsStore.deinit(initGlobal.gpa);
-    try store.assetsStore.init(initGlobal.io, initGlobal.gpa);
-
     errdefer store.gamesStore.deinit(initGlobal.gpa);
     try store.gamesStore.init(initGlobal.io, initGlobal.gpa, initGlobal.environ_map);
 }
@@ -80,10 +77,9 @@ pub fn initWindow(window: *dvui.Window) !void {
 pub fn deinitWindow(window: *dvui.Window) void {
     _ = window; // autofix
 
-    store.assetsStore.deinit(initGlobal.gpa);
-    store.gamesStore.deinit(initGlobal.gpa);
-
     // This is bad, it causes a crash most of the time if while we fetch data we call cancel (e.g. refreshMetadata -> closing the window)
     // However since it is at the end of everything, it is mostly fine (still if there is a better way to not crash while closing the window, that will be preferable :D)
     tasks.cancel(initGlobal.io);
+
+    store.gamesStore.deinit(initGlobal.gpa);
 }
