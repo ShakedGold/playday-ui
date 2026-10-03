@@ -40,8 +40,8 @@
             .path = "../playday-api",
         },
         .playday_api = .{
-            .url = "git+https://github.com/ShakedGold/playday-api.git#cd4c80dadd142979c7f01a8549243802565c0d1b",
-            .hash = "playday_api-0.0.0-ksb_3vUqAQD0MYlVXsK6kp8vhAIUypChsI2C0IXwTER_",
+            .url = "git+https://github.com/ShakedGold/playday-api.git#9a33c46973cf04b6a6c98d2c91e59c3c5d409293",
+            .hash = "playday_api-0.0.0-ksb_3tecAQBdUtaOrpMVyBq3qN1i1LG-h8mhYBAwkwkN",
         },
     },
     .paths = .{
