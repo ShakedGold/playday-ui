@@ -36,7 +36,7 @@ fn formatDate(secondsSinceEpoch: u64, buf: []u8) ![]u8 {
         buf,
         "{s} {d}, {d}",
         .{
-            months[@intFromEnum(month_day.month) - 1],
+            months[@backingInt(month_day.month) - 1],
             month_day.day_index + 1,
             year_day.year,
         },
@@ -149,17 +149,13 @@ pub fn details(game: *const playday_api.models.game.Game) void {
 
     dvui.label(@src(), "Details", .{}, .{});
 
-    var col_widths: [2]f32 = @splat(0);
-
-    var grid = dvui.grid(@src(), .colWidths(&col_widths), .{}, .{
+    var grid = dvui.grid(@src(), .{}, .{
         .expand = .horizontal,
-        .background = false,
+        .background = true,
         .corners = .{ .tl = .square, .tr = .square, .br = .square, .bl = .square },
+        .border = .{},
     });
     defer grid.deinit();
-
-    // Both columns share the width equally.
-    dvui.columnLayoutProportional(&.{ -1, -1 }, &col_widths, grid.data().contentRect().w);
 
     const Field = struct { name: []const u8, value: []const u8 };
 
@@ -170,16 +166,16 @@ pub fn details(game: *const playday_api.models.game.Game) void {
 
     for (fields, 0..) |field, row_num| {
         {
-            var cell = grid.bodyCell(@src(), .colRow(0, row_num), .{});
+            var cell = grid.cell(.{ .col = 0, .row = row_num }, .{ .id_extra = row_num });
             defer cell.deinit();
 
-            var name_text = dvui.textLayout(@src(), .{}, .{ .expand = .both, .background = false });
+            var name_text = dvui.textLayout(@src(), .{}, .{ .expand = .both, .background = false, .id_extra = row_num });
             defer name_text.deinit();
             name_text.addText(field.name, .{ .color_text = .fromHex("adadad") });
         }
 
         {
-            var cell = grid.bodyCell(@src(), .colRow(1, row_num), .{});
+            var cell = grid.cell(.{ .col = 1, .row = row_num }, .{ .id_extra = row_num });
             defer cell.deinit();
 
             var value_scroll = dvui.scrollArea(@src(), .{ .horizontal = .auto, .vertical = .none }, .{
@@ -195,7 +191,7 @@ pub fn details(game: *const playday_api.models.game.Game) void {
             });
             defer value_scroll.deinit();
 
-            var value_text = dvui.textLayout(@src(), .{}, .{ .expand = .both, .background = false });
+            var value_text = dvui.textLayout(@src(), .{}, .{ .expand = .both, .background = false, .id_extra = row_num });
             defer value_text.deinit();
             value_text.addText(field.value, .{});
         }

@@ -82,25 +82,12 @@ pub fn build(b: *std.Build) void {
     // installation directory rather than directly from within the cache directory.
     run_cmd.step.dependOn(b.getInstallStep());
 
-    // This allows the user to pass arguments to the application in the build
-    // command itself, like this: `zig build run -- arg1 arg2 etc`
-    if (b.args) |args| {
-        run_cmd.addArgs(args);
-    }
+    run_cmd.addPassthruArgs();
 
     const dvui_dep = b.dependency("dvui", .{ .target = target, .optimize = optimize, .backend = .sdl3 });
     exe.root_module.addImport("dvui", dvui_dep.module("dvui_sdl3"));
 
-    const use_local_deps = b.option(
-        bool,
-        "local-deps",
-        "Use local development dependencies",
-    ) orelse false;
-
-    const playday_api = if (use_local_deps)
-        b.dependency("playday_api_local", .{ .@"local-deps" = use_local_deps }).module("playday-api")
-    else
-        b.dependency("playday_api", .{ .@"local-deps" = use_local_deps }).module("playday-api");
+    const playday_api = b.dependency("playday_api", .{}).module("playday-api");
 
     exe.root_module.addImport("playday_api", playday_api);
 

@@ -17,8 +17,10 @@ var tasks: std.Io.Group = .init;
 pub const dvui_app: dvui.App = .{
     .config = .{
         .options = .{
+            .org = "Playday",
             .size = .{ .w = 800.0, .h = 600.0 },
             .title = "Playday",
+            .app = "Playday",
             .window_init_options = .{
                 .theme = dvui.Theme.builtin.adwaita_dark,
             },

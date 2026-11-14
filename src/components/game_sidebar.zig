@@ -59,8 +59,8 @@ pub fn gameSidebar() void {
                     .corners = .all(0),
                     .expand = .horizontal,
                     .background = true,
-                    .color_fill_press = .{ .a = 100 },
-                    .color_fill = if (isSelected) .{ .a = 100 } else null,
+                    .color_fill_press = .{ .color = .{ .a = 100 } },
+                    .color_fill = if (isSelected) .{ .color = .{ .a = 100 } } else null,
                 },
             },
         );
