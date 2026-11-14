@@ -88,20 +88,23 @@ pub fn build(b: *std.Build) void {
     exe.root_module.addImport("dvui", dvui_dep.module("dvui_sdl3"));
 
     const playday_api = b.dependency("playday_api", .{}).module("playday-api");
-
     exe.root_module.addImport("playday_api", playday_api);
 
     const store_module = b.addModule("store", .{
         .root_source_file = b.path("src/store/root.zig"),
+        .imports = &.{
+            .{ .name = "playday_api", .module = playday_api },
+        },
     });
-    store_module.addImport("playday_api", playday_api);
     exe.root_module.addImport("store", store_module);
 
     const components_module = b.addModule("components", .{
         .root_source_file = b.path("src/components/root.zig"),
+        .imports = &.{
+            .{ .name = "store", .module = store_module },
+            .{ .name = "dvui", .module = dvui_dep.module("dvui_sdl3") },
+            .{ .name = "playday_api", .module = playday_api },
+        },
     });
-    components_module.addImport("store", store_module);
-    components_module.addImport("dvui", dvui_dep.module("dvui_sdl3"));
-    components_module.addImport("playday_api", playday_api);
     exe.root_module.addImport("components", components_module);
 }

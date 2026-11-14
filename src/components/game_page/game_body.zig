@@ -166,7 +166,7 @@ pub fn details(game: *const playday_api.models.game.Game) void {
 
     for (fields, 0..) |field, row_num| {
         {
-            var cell = grid.cell(.{ .col = 0, .row = row_num }, .{ .id_extra = row_num });
+            var cell = grid.cell(.{ .col = 0, .row = row_num }, .{ .id_extra = row_num, .expand = .horizontal, .min_size_content = .width(350) });
             defer cell.deinit();
 
             var name_text = dvui.textLayout(@src(), .{}, .{ .expand = .both, .background = false, .id_extra = row_num });
@@ -175,7 +175,7 @@ pub fn details(game: *const playday_api.models.game.Game) void {
         }
 
         {
-            var cell = grid.cell(.{ .col = 1, .row = row_num }, .{ .id_extra = row_num });
+            var cell = grid.cell(.{ .col = 1, .row = row_num }, .{ .id_extra = row_num, .expand = .horizontal });
             defer cell.deinit();
 
             var value_scroll = dvui.scrollArea(@src(), .{ .horizontal = .auto, .vertical = .none }, .{
