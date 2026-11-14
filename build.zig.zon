@@ -37,8 +37,8 @@
             .hash = "dvui-0.6.0-dev-AQFJmYKwBAHd8aWNeUgTt4SGiFG_s9XO8XrY7bOarpDo",
         },
         .playday_api = .{
-            .url = "git+https://github.com/ShakedGold/playday-api.git#9a33c46973cf04b6a6c98d2c91e59c3c5d409293",
-            .hash = "playday_api-0.0.0-ksb_3tecAQBdUtaOrpMVyBq3qN1i1LG-h8mhYBAwkwkN",
+            .url = "git+https://github.com/ShakedGold/playday-api.git?ref=main#fb69d5f67564e4bafabe00a3018375fdc9ce3361",
+            .hash = "playday_api-0.0.0-ksb_3lacAQA45ae0TXDpl9wxKMzZGM4iQNTAb1UTIILQ",
         },
     },
     .paths = .{
